@@ -6,14 +6,8 @@ const farmerRouter = express.Router()
 dotenv.config()
 
 const { farmerAuth } = require('../middleware/auth')
-const { generateAndStoreOTP, verifyOPTAndGenerateJWT } = require('../utils/otp')
-const { farmerModel, cropModel, OTPModel } = require('../models/db')
+const { farmerModel, cropModel } = require('../models/db')
 
-//Initialize twilio
-const client = new twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-)
 
 farmerRouter.post('/signup', async (req, res) => {
 

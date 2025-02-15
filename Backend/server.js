@@ -17,7 +17,7 @@ app.use('/v1/api/admin', adminRouter)
 app.use('/v1/api/codinator', coordinatorRouter)
 app.use('/v1/api/farmer', farmerRouter)
 
-//connect to mongo and start the server
+//connect to mongoDB and start the server
 async function main() {
     try {
         await mongoose.connect(process.env.CONN_STRING)
