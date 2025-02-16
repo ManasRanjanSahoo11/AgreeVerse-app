@@ -1,21 +1,36 @@
 const express = require('express')
 const mongoose = require('mongoose')
+const session = require('express-session')
+const passport = require('passport')
 const dotenv = require('dotenv')
+dotenv.config();
 
 const { userRouter } = require('./routes/user')
 const { adminRouter } = require('./routes/admin')
 const { coordinatorRouter } = require('./routes/coordinator');
 const { farmerRouter } = require('./routes/farmer');
 
-dotenv.config();
 const app = express();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
+app.use(cors());
 
-app.use('/v1/api/user', userRouter)
-app.use('/v1/api/admin', adminRouter)
-app.use('/v1/api/codinator', coordinatorRouter)
-app.use('/v1/api/farmer', farmerRouter)
+//Session Middleware
+app.use(session({
+    secret: "100xManas",
+    resave: true,
+    saveUninitialized: false
+}))
+
+//Initialize passport
+app.use(passport.initialize())
+app.use(passport.session())
+
+app.use('/api/v1/user', userRouter)
+app.use('/api/v1/admin', adminRouter)
+app.use('/api/v1/coordinator', coordinatorRouter)
+app.use('/api/v1/farmer', farmerRouter)
 
 //connect to mongoDB and start the server
 async function main() {
