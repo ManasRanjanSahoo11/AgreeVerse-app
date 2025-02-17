@@ -1,70 +1,68 @@
-const passport = require('passport')
-const GoogleStrategy = require('passport-google-oauth20').Strategy
-const { Admin, Coordinator, Farmer, User } = require('../models/db')
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { Admin, Coordinator, Farmer, User } = require('../models/db');
 
 passport.use(new GoogleStrategy(
     {
-        clientId,
-        clientSecret,
-        callbackURL
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: "/auth/google/callback"
     },
     async (accessToken, refreshToken, profile, done) => {
-
-        const { id, dispalyName, emails } = profile
-        const email = emails[0].value
+        const { id, displayName, emails } = profile;
+        const email = emails[0].value;
 
         try {
+            // Check if user exists in any role
+            let user = await Admin.findOne({ email }) ||
+                       await Coordinator.findOne({ email }) ||
+                       await Farmer.findOne({ email }) ||
+                       await User.findOne({ email });
 
-            //check user exits in any role?
-            const user = await Admin.findOne({ email }) ||
-                await Coordinator.findOne({ email }) ||
-                await Farmer.findOne({ email }) ||
-                await User.findOne({ email })
+            if (user) return done(null, user); // Return existing user
 
-            if (!user) {
-                let role = "user"; // Default to "user" if role is not sent
+            // Default role is "user" if not provided
+            const role = "user";  // You can modify this based on frontend selection
 
-                const newUser = {
-                    name: dispalyName,
-                    email: email,
-                    googleId: id
-                }
+            const newUser = {
+                name: displayName,
+                email: email,
+                googleId: id
+            };
 
-                if (role == 'admin') user = await Admin.create(newUser)
-                else if (role == 'coordinator') user = await Coordinator.create(newUser)
-                else if (role == 'farmer') user = await Farmer.create(newUser)
-                else user = await User.create(newUser)
+            // Store user in the correct collection based on role
+            if (role === 'admin') user = await Admin.create(newUser);
+            else if (role === 'coordinator') user = await Coordinator.create(newUser);
+            else if (role === 'farmer') user = await Farmer.create(newUser);
+            else user = await User.create(newUser);
 
-                return done(null, user)
-            }
+            return done(null, user);
         } catch (error) {
             return done(error, null);
         }
     }
-))
+));
 
 // Serialize User
 passport.serializeUser((user, done) => {
     done(null, { id: user._id, role: user.constructor.modelName });
 });
 
-// Deserialize user(retrive data)
+// Deserialize User (Retrieve data)
 passport.deserializeUser(async (obj, done) => {
     const { id, role } = obj;
 
-    //When a user logs in, Passport.js saves their user ID in a session.The deserializeUser function retrieves the full user object from the database using that ID when needed.
     const Model = role === 'Admin' ? Admin
         : role === 'Coordinator' ? Coordinator
-            : role === 'Farmer' ? Farmer
-                : User; // Default to User
+        : role === 'Farmer' ? Farmer
+        : User; // Default to User
 
     try {
-        const user = await Model.findById(id)
-        done(null, user)
+        const user = await Model.findById(id);
+        done(null, user);
     } catch (error) {
-        done(error, null)
+        done(error, null);
     }
-
-})
+});
 
 module.exports = passport;

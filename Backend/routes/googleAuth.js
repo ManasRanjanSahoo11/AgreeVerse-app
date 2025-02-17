@@ -1,21 +1,28 @@
-const express = require('express')
-const passport = require('../strategy/google')
-const router = express.Router
+const express = require('express');
+const passport = require('../strategy/google');
+const googleAuthRouter = express.Router();
 
 // Google OAuth Login
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
+googleAuthRouter.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // Google OAuth Callback
-router.get('google/calback',
-    passport.authenticate('google', {
-        successRedirect: "/dashboard",//fit it
-        failureRedirect: "/login"
-    })
-)
+googleAuthRouter.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    (req, res) => {
+        // Redirect user based on role
+        const role = req.user.constructor.modelName;
+        
+        if (role === 'Admin') res.redirect('/admin/dashboard');
+        else if (role === 'Coordinator') res.redirect('/coordinator/dashboard');
+        else if (role === 'Farmer') res.redirect('/farmer/dashboard');
+        else res.redirect('/user/dashboard'); // Default: User dashboard
+    }
+);
 
-router.get('/logout', (req, res)=>{
+// Logout Route
+googleAuthRouter.get('/logout', (req, res) => {
     req.logout();
-    res.redirect('/')
-})
+    res.redirect('/');
+});
 
-module.exports = router
+module.exports = googleAuthRouter;

@@ -9,6 +9,7 @@ const { userRouter } = require('./routes/user')
 const { adminRouter } = require('./routes/admin')
 const { coordinatorRouter } = require('./routes/coordinator');
 const { farmerRouter } = require('./routes/farmer');
+const googleAuthRouter = require('./routes/googleAuth')
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(session({
 //Initialize passport
 app.use(passport.initialize())
 app.use(passport.session())
+
+// Use the authentication routes
+app.use('/auth', googleAuthRouter);
 
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/admin', adminRouter)
