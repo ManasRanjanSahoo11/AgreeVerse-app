@@ -1,5 +1,6 @@
 const express = require('express')
 const mongoose = require('mongoose')
+const cors = require('cors')
 const session = require('express-session')
 const passport = require('passport')
 const dotenv = require('dotenv')
@@ -15,11 +16,14 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173', // frontend URL
+    credentials:true
+}));
 
 //Session Middleware
 app.use(session({
-    secret: "100xManas",
+    secret: process.env.SESSION_SECRET || "100xManas",
     resave: true,
     saveUninitialized: false
 }))
@@ -40,8 +44,10 @@ app.use('/api/v1/farmer', farmerRouter)
 async function main() {
     try {
         await mongoose.connect(process.env.CONN_STRING)
+        console.log('Connected to MongoDB');   
     } catch (err) {
         return console.log("Error! while connecting BD " + err);
+        process.exit(1); // Exit
     }
 
     app.listen(process.env.PORT, () => `Server running on port ${process.env.PORT}`)

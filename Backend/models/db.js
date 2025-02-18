@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const commonFields = {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    phoneNo: { type: String, required: true, unique: true },
+    phoneNo: { type: String, unique: true },
     password: { type: String }, // Only for manual signup (Google users won't have this)
     googleId: { type: String }, // Store Google OAuth ID
     createdAt: { type: Date, default: Date.now },

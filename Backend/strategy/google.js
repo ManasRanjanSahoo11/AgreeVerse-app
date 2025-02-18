@@ -19,7 +19,13 @@ passport.use(new GoogleStrategy(
                        await Farmer.findOne({ email }) ||
                        await User.findOne({ email });
 
-            if (user) return done(null, user); // Return existing user
+            if (user) {
+                // Update existing user if needed (merge profile information)
+                user.name = displayName || user.name;
+                user.googleId = id;
+                await user.save();
+                return done(null, user); // Return existing (updated) user
+            }
 
             // Default role is "user" if not provided
             const role = "user";  // You can modify this based on frontend selection
