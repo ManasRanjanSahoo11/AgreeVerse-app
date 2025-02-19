@@ -4,7 +4,7 @@ const { z } = require('zod')
 const userRouter = express.Router()
 const { userAuth } = require("../middleware/auth");
 const jwt = require('jsonwebtoken');
-const { userModel } = require('../models/db');
+const { User, cropModel, userPurchasedCropModel } = require('../models/db');
 
 userRouter.post('/signup', async (req, res) => {
 
@@ -12,7 +12,7 @@ userRouter.post('/signup', async (req, res) => {
         name: z.string(),
         email: z.string().email(),
         phoneNo: z.string().transform(data => Number(data)),
-        password: z.string().min(6, {message: "Password must be at least 6 characters long."})
+        password: z.string().min(6, { message: "Password must be at least 6 characters long." })
     })
 
     const parsedData = userSignupRequiredBody.safeParse(req.body)
@@ -20,13 +20,13 @@ userRouter.post('/signup', async (req, res) => {
     try {
         const { name, email, phoneNo, password } = parsedData.data;
 
-        const exitingUser = await userModel.findOne({ phoneNo, email })
+        const exitingUser = await User.findOne({ phoneNo, email })
 
         if (exitingUser) return res.status(409).send("User already exits")
 
         const hash = await bcrypt.hash(password, 10)
 
-        const newUser = await userModel.create({
+        const newUser = await User.create({
             name,
             email,
             phoneNo,
@@ -66,7 +66,7 @@ userRouter.post('/signin', async (req, res) => {
         const { identifier, password } = parsedData.data;
 
         // Find user by email or phone
-        const user = await userModel.findOne({
+        const user = await User.findOne({
             $or: [{ email: identifier }, { phone: identifier }]
         })
 
@@ -82,7 +82,7 @@ userRouter.post('/signin', async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,  // Prevents JavaScript access (XSS protection)
             secure: true,    // Works only on HTTPS
-            sameSite: "lax", 
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000, // 1 day expiration
         }).status(200).json({
             success: true,
@@ -111,20 +111,107 @@ userRouter.post('/signout', (req, res) => {
     }
 })
 
-//preview crops add the platform
-userRouter.get('/previewcrop', userAuth, (req, res) => {
+// preview all the crops.
+userRouter.get('/previewcrop', async (req, res) => {
+    try {
+        const crops = await cropModel.find({})
+        res.status(200).json({ success: true, message: "Crops retrieved successfully", crops })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal server err" });
+    }
+})
+
+// purchase a crop by the user.
+userRouter.post('/purchase-crop', userAuth, async (req, res) => {
+
+    const userId = req.user._id; //come from middleware
+    const { cropId } = req.body;
+
+    const user = await User.findOne({ _id: userId })
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found" })
+    }
+
+    try {
+        const crop = await cropModel.findOne(cropId)
+
+        if (!crop) {
+            return res.status(404).json({ message: "Crop not found" });
+        }
+
+        // Add payment system (using Stripe) 
+        // --> Below code is for only look for now.
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: crop.price * 100,
+            currency: "inr",
+            metadata: {
+                userId: userId.toString(),
+                cropId: cropId,
+                priceAtPurchase: crop.price
+            }
+        });
+
+        if (paymentIntent.status === 'success') {
+            userPurchasedCropModel.purchasedCrops.push(cropId)
+            await userPurchasedCropModel.save()
+        }
+
+        const newPurchase = new userPurchasedCropModel({
+            userId: userId,
+            purchasedCrops: [cropId],
+            quantity: quantity,
+            paymentId: paymentIntent.id,
+            paymentMethod: paymentMethod,
+            paymentStatus: 'pending',
+            totalAmount: totalAmount
+        });
+
+        await newPurchase.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Purchase completed successfully",
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+            purchaseId: newPurchase._id
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal server err" });
+    }
 
 })
 
-//all purchases cops by users 
-userRouter.post('purchasedcrops', userAuth, (req, res) => {
+// Retrieve all purchases of crops by the users
+userRouter.get('/user-purchases/:userId', userAuth, async (req, res) => {
+    const { userId } = req.params;
 
-})
+    try {
+        // Find all purchase documents for this user
+        const purchases = await UserPurchasedCrop.find({ userId }).populate('purchasedCrops.cropId');
 
-//payment system
-userRouter.post('/makepayment', userAuth, (req, res) => {
+        if (purchases.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No purchases found for this user",
+                purchases: []
+            });
+        }
 
-})
+        res.status(200).json({
+            success: true,
+            message: "Successfully retrieved all the crops purchased by the user",
+            purchases
+        });
+
+    } catch (err) {
+        console.error('Error retrieving user purchases:', err);
+        res.status(500).json({ message: "Internal server err" });
+    }
+});
 
 module.exports = {
     userRouter

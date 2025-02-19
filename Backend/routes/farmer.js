@@ -160,8 +160,6 @@ farmerRouter.post('/signout', (req, res) => {
     }
 })
 
-
-
 //add crops add the platform
 farmerRouter.post('/add-crop', farmerAuth, async (req, res) => {
 
