@@ -1,150 +1,103 @@
 const express = require('express')
-const twilio = require('twilio')
+const { z, number } = require('zod')
 const dotenv = require('dotenv')
 const farmerRouter = express.Router()
 
 dotenv.config()
 
 const { farmerAuth } = require('../middleware/auth')
-const { farmerModel, cropModel } = require('../models/db')
+const { Farmer, cropModel } = require('../models/db')
 
 
-farmerRouter.post('/signup', async (req, res) => {
+userRouter.post('/signup', async (req, res) => {
+
+    const userSignupRequiredBody = z.object({
+        name: z.string(),
+        email: z.string().email(),
+        phoneNo: z.string().transform(data => Number(data)),
+        password: z.string().min(6, { message: "Password must be at least 6 characters long." })
+    })
+
+    const parsedData = userSignupRequiredBody.safeParse(req.body)
 
     try {
-        const { phoneNo } = req.body;
+        const { name, email, phoneNo, password } = parsedData.data;
 
-        const exitingFarmer = await farmerModel.findOne({ phoneNo })
+        const exitingFarmer = await Farmer.findOne({ phoneNo, email })
 
-        if (exitingFarmer) {
-            return res.status(409).json({
-                success: false,
-                message: "Farmer already exits"
-            })
-        }
+        if (exitingFarmer) return res.status(409).send("Farmer already exits")
 
-        const newFarmer = await farmerModel.create({
-            phoneNo
+        const hash = await bcrypt.hash(password, 10)
+
+        const newFarmer = await Farmer.create({
+            name,
+            email,
+            phoneNo,
+            password: hash
         })
 
-        if (!newFarmer) {
+        if (newFarmer) {
             res.status(201).json({
-                success: false,
-                message: "Failed to create farmer"
+                success: true,
+                message: "New farmer created successfully"
             })
         }
 
-        res.status(201).json({
-            success: true,
-            message: "New farmer created successfully"
-        })
     } catch (err) {
-        console.error(err);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-        });
+        console.log(err);
+        res.status(500).send("Internal server crash")
     }
-
 })
 
-farmerRouter.post('/signin', async (req, res) => {
+userRouter.post('/signin', async (req, res) => {
+
+    const userSigninRequiredBody = z.object({
+        identifier: z.string().refine((value) => {
+            return /\S+@\S+\.\S+/.test(value) || /^\d{10}$/.test(value);
+        }, { message: "Invalid email or phone number format" }),
+        password: z.string().min(6)
+    });
+
+    const parsedData = userSigninRequiredBody.safeParse(req.body)
+
+    if (!parsedData.success) {
+        return res.status(400).json({ success: false, message: parsedData.error.errors });
+    }
+
     try {
-        const { phoneNo } = req.body;
+        const { identifier, password } = parsedData.data;
 
-        const farmer = await farmerModel.findOne({ phoneNo })
+        // Find farmer by email or phone
+        const farmer = await User.findOne({
+            $or: [{ email: identifier }, { phone: identifier }]
+        })
 
-        if (!farmer) {
-            return res.status(404).json({
-                success: false,
-                message: "Farmer not found"
-            })
-        }
+        if (!farmer) return res.status(404).json({ success: false, message: "User not found" });
 
-        res.status(200).json({
+        // Compare password
+        const comparePassword = await bcrypt.compare(password, user.password);
+        if (!comparePassword) return res.status(400).json({ success: false, message: "Invalid credentials" });
+
+        //Generate JWT
+        const token = jwt.sign({ userId: farmer._id }, process.env.JWT_FARMER_SECRET, { expiresIn: "1h" })
+
+        res.cookie("token", token, {
+            httpOnly: true,  // Prevents JavaScript access (XSS protection)
+            secure: true,    // Works only on HTTPS
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000, // 1 day expiration
+        }).status(200).json({
             success: true,
-            farmerId: farmer._id,
-            nextStep: "send-otp"
+            message: 'Farmer signin successfull.'
         })
 
     } catch (err) {
         console.log(err);
-        res.status(500).json({
-            success: false,
-            error: 'Sign-in process failed'
-        });
+        res.status(500).send("Internal server crash")
     }
 })
 
-farmerRouter.post('/send-otp', async (req, res) => {
-    try {
-        const { phoneNo } = req.body;
-
-        if (!phoneNo) {
-            return res.status(400).json({ success: false, message: "Phone number is required" });
-        }
-
-        const formattedPhoneNo = String(phoneNo).startsWith('+') ? String(phoneNo) : `+91${String(phoneNo)}`;
-
-        const farmer = await farmerModel.findOne({ phoneNo })
-
-        if (!farmer) {
-            return res.status(404).send("farmer not found")
-        }
-
-        const otp = await generateAndStoreOTP(farmer);
-        // console.log(otp);
-
-        // Send via Twilio
-        await client.messages.create({
-            body: `Your OTP is: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: formattedPhoneNo
-        })
-
-        res.status(200).json({
-            success: true,
-            message: 'OTP sent successfully',
-            nextStep: "verify-otp"
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: err.error
-        });
-    }
-})
-
-farmerRouter.post('/verify-otp', async (req, res) => {
-    try {
-        const { phoneNo, otp } = req.body;
-
-        // verifyOPTAndGenerateJWT
-        const { token, farmer } = await verifyOPTAndGenerateJWT(phoneNo, otp)
-
-        // set JWT token
-        res.cookie("token", token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: true,
-            maxAge: 24 * 60 * 60 * 1000
-        })
-
-        res.json({
-            success: true,
-            message: 'Authentication successful',
-            token,
-            farmer,
-        })
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-})
-
-farmerRouter.post('/signout', (req, res) => {
+userRouter.post('/signout', (req, res) => {
     try {
         res.cookie("token", "", {
             httpOnly: true, // Prevents JavaScript from accessing the cookie
@@ -156,102 +109,131 @@ farmerRouter.post('/signout', (req, res) => {
         res.status(200).json({ success: true, message: "Logged out successfully" });
     } catch (err) {
         console.log(err);
-        res.status(500).json({ success: false, message: "Internal server err" });
+        res.status(500).json({ message: "Internal server err" });
     }
 })
 
 //add crops add the platform
 farmerRouter.post('/add-crop', farmerAuth, async (req, res) => {
 
-    const { title, description, imgURL, price } = req.body
-
-    const newCrop = await cropModel.create({
-        title,
-        description,
-        imgURL,
-        price
+    const addCropRequiredBody = z.object({
+        title: string(),
+        description: string(),
+        imgURL: string(),
+        tag: string(),
+        price: number()
     })
 
-    if (!newCrop) {
-        res.status(401).json({
-            success: false,
-            message: "Something went wrong crop not added,"
+    const parsedData = addCropRequiredBody(req.body)
+
+    try {
+        const { title, description, imgURL, tag, price } = parsedData.data
+
+        const newCrop = await cropModel.create({
+            title,
+            description,
+            imgURL,
+            tag,
+            price,
         })
-        return
+
+        if (!newCrop) {
+            res.status(401).json({
+                success: false,
+                message: "Something went wrong crop not added,"
+            })
+            return
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Crop added successfully"
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal server crash")
     }
-
-    res.status(200).json({
-        success: true,
-        message: "Crop added successfully"
-    })
-
 })
 
 //update the crop by farmer
 farmerRouter.put('/update-crop/:cropId', farmerAuth, async (req, res) => {
-    const { cropId } = req.params;
+    try {
+        const { cropId } = req.params;
 
-    const updateCrop = await cropModel.findOneAndUpdate({ _id: cropId }, {
-        title,
-        description,
-        imgURL,
-        price
-    }, {
-        new: true
-    })
-
-    if (!updateCrop) {
-        res.status(404).json({
-            success: false,
-            message: "Crop not found or not updated."
+        const updateCrop = await cropModel.findOneAndUpdate({ _id: cropId }, {
+            title,
+            description,
+            imgURL,
+            tag,
+            price
+        }, {
+            new: true
         })
-        return
+
+        if (!updateCrop) {
+            res.status(404).json({
+                success: false,
+                message: "Crop not found or not updated."
+            })
+            return
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Crop updated successfully"
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal server crash")
     }
-
-    res.status(200).json({
-        success: true,
-        message: "Crop updated successfully"
-    })
-
 })
 
 //preview all crops that added by the farmer
 farmerRouter.get('/preview-crops', farmerAuth, async (req, res) => {
-    const crops = await cropModel.find({})
+    try {
+        const crops = await cropModel.find({})
 
-    if (crops.length === 0) {
-        res.status(404).json({
-            success: false,
-            message: "No crops found."
+        if (crops.length === 0) {
+            res.status(404).json({
+                success: false,
+                message: "No crops found."
+            })
+            return
+        }
+
+        res.status(200).json({
+            success: true,
+            crops: crops
         })
-        return
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal server crash")
     }
-
-    res.status(200).json({
-        success: true,
-        crops: crops
-    })
 })
 
 //delete the crop
 farmerRouter.delete('/delete-crop/:cropId', farmerAuth, async (req, res) => {
-    const { cropId } = req.params;
+    try {
+        const { cropId } = req.params;
 
-    const deleteCrop = await cropModel.findOneAndDelete({ _id: cropId })
+        const deleteCrop = await cropModel.findOneAndDelete({ _id: cropId })
 
-    if (!deleteCrop) {
-        res.status(404).json({
-            success: false,
-            message: "Crop not found or not deleted."
+        if (!deleteCrop) {
+            res.status(404).json({
+                success: false,
+                message: "Crop not found or not deleted."
+            })
+            return
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Crop deleted successfully"
         })
-        return
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal server crash")
     }
-
-    res.status(200).json({
-        success: true,
-        message: "Crop deleted successfully"
-    })
-
 })
 
 module.exports = {

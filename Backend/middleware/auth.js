@@ -55,9 +55,9 @@ function farmerAuth(req, res, next) {
 
     } catch (err) {
         console.log(err);
-        res.status(201).json({
+        res.status(401).json({
             success: false,
-            message: "Internal server error"
+            message: "unauthorized"
         })
     }
 }
