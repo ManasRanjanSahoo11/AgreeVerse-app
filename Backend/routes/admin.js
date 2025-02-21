@@ -26,8 +26,6 @@ adminRouter.post('/signout', (req, res) => { })
 //remove farmer
 
 
-//promotion feature
-
 module.exports = {
     adminRouter
 }
