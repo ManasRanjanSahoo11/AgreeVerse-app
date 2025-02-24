@@ -1,8 +1,10 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 const coordinatorRouter = express.Router()
 const dotenv = require('dotenv')
-const { Coordinator } = require('../models/db')
+const { Coordinator, Farmer } = require('../models/db')
+const { coodinatorAuth } = require('../middleware/auth')
 
 dotenv.config()
 
@@ -110,46 +112,183 @@ coordinatorRouter.post('/signout', (req, res) => {
     }
 })
 
+
 // Coordinator access there profile and perform the CURD operation
-//add farmer
-coordinatorRouter.post('/:coordinatorId/add-farmer', (req, res) => {
 
-    /*
-        const commonFields = {
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        phoneNo: { type: String, unique: true },
-        password: { type: String }, // Only for manual signup (Google users won't have this)
-        googleId: { type: String }, // Store Google OAuth ID
-        createdAt: { type: Date, default: Date.now },
-    };
-    
-    const farmerSchema = new mongoose.Schema({
-        ...commonFields,
-        coordinatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coordinator', required: true },
-    });
-    
-    */
-   
-    const { name, email, phoneNo, password, coordinatorId } = req.body
+// Add farmer
+coordinatorRouter.post('/:coordinatorId/add-farmer', coodinatorAuth, async (req, res) => {
+    try {
+        const { coordinatorId } = req.params;
+        const { name, email, phoneNo, password } = req.body;
 
-    
-})
+        // Validate required fields
+        if (!name || !email || !phoneNo || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
+        }
 
-//update farmer
-coordinatorRouter.put('/:coordinatorId/update-farmer/:updateFarmerId', (req, res) => {
+        // Check if farmer already exists
+        const farmer = await Farmer.findOne({ 
+            $or: [{ email }, { phoneNo }] 
+        });
 
-})
+        if (farmer) {
+            return res.status(409).json({
+                success: false,
+                message: "Farmer already exists with this email or phone number"
+            });
+        }
 
-//delete farmer
-coordinatorRouter.delete('/:coordinatorId/detele-farmer/:deleteFarmerId', (req, res) => {
+        // Hash password
+        const hash = await bcrypt.hash(password, 10);
 
-})
+        // Create new farmer
+        const newFarmer = await Farmer.create({
+            name,
+            email,
+            phoneNo,
+            password: hash,
+            coordinatorId
+        });
 
-// get all farmers
-coordinatorRouter.get('/:coordinatorId/all-farmers', (req, res) => {
+        res.status(201).json({
+            success: true,
+            message: `New farmer created by coordinator ${coordinatorId}`,
+            data: {
+                id: newFarmer._id,
+                name: newFarmer.name,
+                email: newFarmer.email,
+                phoneNo: newFarmer.phoneNo
+            }
+        });
 
-})
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+});
+
+// Update farmer
+coordinatorRouter.put('/:coordinatorId/update-farmer/:farmerId', coodinatorAuth, async (req, res) => {
+    try {
+        const { coordinatorId, farmerId } = req.params;
+        const updateData = req.body;
+
+        // Remove password from update data if present
+        delete updateData.password;
+
+        // Check if farmer exists and belongs to coordinator
+        const farmer = await Farmer.findOne({
+            _id: farmerId,
+            coordinatorId
+        });
+
+        if (!farmer) {
+            return res.status(404).json({
+                success: false,
+                message: "Farmer not found or not authorized"
+            });
+        }
+
+        // Update farmer
+        const updatedFarmer = await Farmer.findByIdAndUpdate(
+            farmerId,
+            { $set: updateData },
+            { new: true, select: '-password' }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Farmer updated successfully",
+            data: updatedFarmer
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+});
+
+// Delete farmer
+coordinatorRouter.delete('/:coordinatorId/delete-farmer/:farmerId', coodinatorAuth, async (req, res) => {
+    try {
+        const { coordinatorId, farmerId } = req.params;
+
+        // Check if farmer exists and belongs to coordinator
+        const farmer = await Farmer.findOne({
+            _id: farmerId,
+            coordinatorId
+        });
+
+        if (!farmer) {
+            return res.status(404).json({
+                success: false,
+                message: "Farmer not found or not authorized"
+            });
+        }
+
+        // Delete farmer
+        await Farmer.findByIdAndDelete(farmerId);
+
+        res.status(200).json({
+            success: true,
+            message: "Farmer deleted successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+});
+
+// Get all farmers
+coordinatorRouter.get('/:coordinatorId/all-farmers', coodinatorAuth, async (req, res) => {
+    try {
+        const { coordinatorId } = req.params;
+        
+        // Add pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Get farmers with pagination
+        const farmers = await Farmer.find({ coordinatorId })
+            .select('-password')
+            .skip(skip)
+            .limit(limit);
+
+        // Get total count for pagination
+        const total = await Farmer.countDocuments({ coordinatorId });
+
+        res.status(200).json({
+            success: true,
+            data: farmers,
+            pagination: {
+                total,
+                page,
+                pages: Math.ceil(total / limit)
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+});
 
 module.exports = {
     coordinatorRouter
