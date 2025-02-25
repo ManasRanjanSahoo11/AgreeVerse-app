@@ -4,6 +4,7 @@ const { z } = require('zod');
 const bcrypt = require('bcrypt');
 const { Admin, Coordinator, Farmer } = require('../models/db')
 const adminRouter = express.Router()
+const googleAuthRouter = require('./googleAuth')
 
 adminRouter.post('/signup', async (req, res) => {
 
@@ -109,6 +110,12 @@ adminRouter.post('/signout', (req, res) => {
     }
 })
 
+adminRouter.get('/admin/dashboard', googleAuthRouter, (req, res)=> {
+    res.json({
+        success:true,
+        message:"Admin login successfully"
+    })
+})
 
 // Coordinator validation schema
 const coordinatorSchema = z.object({
@@ -436,7 +443,7 @@ adminRouter.delete('/delete-farmer/:farmerId', adminAuth, async (req, res) => {
 });
 
 
-// Get payment status for all purchases
+// Get payment status for all purchases 
 adminRouter.get('/payment-status', adminAuth, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;

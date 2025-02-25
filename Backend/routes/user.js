@@ -111,6 +111,14 @@ userRouter.post('/signout', (req, res) => {
     }
 })
 
+
+userRouter.get('/user/dashboard', (req, res)=>{
+    res.json({
+        success:true,
+        message:"User login successfully"
+    })
+})
+
 // preview all the crops.
 userRouter.get('/previewcrop', async (req, res) => {
     try {

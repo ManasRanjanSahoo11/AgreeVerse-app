@@ -18,7 +18,7 @@ googleAuthRouter.get('/google/callback',
         if (role === 'admin') return res.redirect('/admin/dashboard');
         else if (role === 'coordinator') return res.redirect('/coordinator/dashboard');
         else if (role === 'farmer') return res.redirect('/farmer/dashboard');
-        else return res.redirect('/user/dashboard'); // Default: User dashboard
+        else return res.redirect('/user/dashboard'); // Default : User dashboard
     }
 );
 

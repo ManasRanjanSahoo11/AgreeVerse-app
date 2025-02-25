@@ -5,6 +5,7 @@ const coordinatorRouter = express.Router()
 const dotenv = require('dotenv')
 const { Coordinator, Farmer } = require('../models/db')
 const { coodinatorAuth } = require('../middleware/auth')
+const googleAuthRouter = require('./googleAuth')
 
 dotenv.config()
 
@@ -114,6 +115,13 @@ coordinatorRouter.post('/signout', (req, res) => {
 
 
 // Coordinator access there profile and perform the CURD operation
+
+coordinatorRouter.get('/coordinator/dashboard',googleAuthRouter, (req, res)=>{
+    res.json({
+        success:true,
+        message:"Coordinator login successfully"
+    })
+})
 
 // Add farmer
 coordinatorRouter.post('/:coordinatorId/add-farmer', coodinatorAuth, async (req, res) => {

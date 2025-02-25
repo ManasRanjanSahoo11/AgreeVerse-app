@@ -9,7 +9,7 @@ const { farmerAuth } = require('../middleware/auth')
 const { Farmer, cropModel } = require('../models/db')
 
 
-userRouter.post('/signup', async (req, res) => {
+farmerRouter.post('/signup', async (req, res) => {
 
     const userSignupRequiredBody = z.object({
         name: z.string(),
@@ -49,7 +49,7 @@ userRouter.post('/signup', async (req, res) => {
     }
 })
 
-userRouter.post('/signin', async (req, res) => {
+farmerRouter.post('/signin', async (req, res) => {
 
     const userSigninRequiredBody = z.object({
         identifier: z.string().refine((value) => {
@@ -97,7 +97,7 @@ userRouter.post('/signin', async (req, res) => {
     }
 })
 
-userRouter.post('/signout', (req, res) => {
+farmerRouter.post('/signout', (req, res) => {
     try {
         res.cookie("token", "", {
             httpOnly: true, // Prevents JavaScript from accessing the cookie
@@ -112,6 +112,15 @@ userRouter.post('/signout', (req, res) => {
         res.status(500).json({ message: "Internal server err" });
     }
 })
+
+
+farmerRouter.get('/farmer/dashboard', (req, res) => {
+    res.json({
+        success:true,
+        message:"Farmer login successfully"
+    })
+})
+
 
 //add crops add the platform
 farmerRouter.post('/add-crop', farmerAuth, async (req, res) => {
