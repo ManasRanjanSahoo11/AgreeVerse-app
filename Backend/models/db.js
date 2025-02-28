@@ -4,8 +4,9 @@ const commonFields = {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phoneNo: { type: String, unique: true },
-    password: { type: String }, // Only for manual signup (Google users won't have this)
-    googleId: { type: String }, // Store Google OAuth ID
+    password: { type: String, unique: true }, // Only for manual signup (Google users won't have this)
+    googleId: { type: String, unique: true }, // Store Google OAuth ID
+    role: { type: String },
     createdAt: { type: Date, default: Date.now },
 };
 
@@ -22,6 +23,8 @@ const farmerSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({ ...commonFields });
+
+
 
 const cropSchema = new mongoose.Schema({
     title: { type: String, required: true },

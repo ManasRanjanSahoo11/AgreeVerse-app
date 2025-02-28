@@ -1,23 +1,27 @@
 const passport = require('passport');
+const dotenv = require('dotenv')
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Admin, Coordinator, Farmer, User } = require('../models/db');
+
+dotenv.config()
 
 passport.use(new GoogleStrategy(
     {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/auth/google/callback"
+        callbackURL: "/auth/google/callback",
+        passReqToCallback: true, // Allow access to request
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
         const { id, displayName, emails } = profile;
         const email = emails[0].value;
 
         try {
             // Check if user exists in any role
             let user = await Admin.findOne({ email }) ||
-                       await Coordinator.findOne({ email }) ||
-                       await Farmer.findOne({ email }) ||
-                       await User.findOne({ email });
+                await Coordinator.findOne({ email }) ||
+                await Farmer.findOne({ email }) ||
+                await User.findOne({ email });
 
             if (user) {
                 // Update existing user if needed (merge profile information)
@@ -27,13 +31,19 @@ passport.use(new GoogleStrategy(
                 return done(null, user); // Return existing (updated) user
             }
 
-            // Default role is "user" if not provided
-            const role = "user";  // You can modify this based on frontend selection
+            // Retrieve the role from state
+            let role = "user"; // Default role
+
+            if (req.query.state) {
+                const state = JSON.parse(req.query.state);
+                if (state.role) role = state.role; // Assign role from frontend
+            }
 
             const newUser = {
                 name: displayName,
                 email: email,
-                googleId: id
+                googleId: id,
+                role,
             };
 
             // Store user in the correct collection based on role
@@ -42,7 +52,14 @@ passport.use(new GoogleStrategy(
             else if (role === 'farmer') user = await Farmer.create(newUser);
             else user = await User.create(newUser);
 
-            return done(null, user);
+            // Generate JWT Token
+            const token = jwt.sign(
+                { id: user._id }, // Store ID in JWT
+                process.env.JWT_SECRET,
+                { expiresIn: "1d" }
+            );
+
+            return done(null, { user, token });
         } catch (error) {
             return done(error, null);
         }
@@ -60,8 +77,8 @@ passport.deserializeUser(async (obj, done) => {
 
     const Model = role === 'Admin' ? Admin
         : role === 'Coordinator' ? Coordinator
-        : role === 'Farmer' ? Farmer
-        : User; // Default to User
+            : role === 'Farmer' ? Farmer
+                : User; // Default to User
 
     try {
         const user = await Model.findById(id);

@@ -267,6 +267,7 @@ adminRouter.delete('/delete-coordinator/:coordinatorId', adminAuth, async (req, 
     }
 });
 
+
 // Add farmer
 adminRouter.post('/add-farmer', adminAuth, async (req, res) => {
     try {
