@@ -114,13 +114,12 @@ farmerRouter.post('/signout', (req, res) => {
 })
 
 
-farmerRouter.get('/farmer/dashboard', (req, res) => {
+farmerRouter.get('/farmer/dashboard', farmerAuth, (req, res) => {
     res.json({
-        success:true,
-        message:"Farmer login successfully"
+        success: true,
+        message: "Farmer login successfully"
     })
 })
-
 
 //add crops add the platform
 farmerRouter.post('/add-crop', farmerAuth, async (req, res) => {

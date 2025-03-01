@@ -4,7 +4,8 @@ const { z } = require('zod');
 const bcrypt = require('bcrypt');
 const { Admin, Coordinator, Farmer } = require('../models/db')
 const adminRouter = express.Router()
-const googleAuthRouter = require('./googleAuth')
+const googleAuthRouter = require('./googleAuth');
+const { adminAuth } = require('../middleware/auth');
 
 adminRouter.post('/signup', async (req, res) => {
 
@@ -110,7 +111,7 @@ adminRouter.post('/signout', (req, res) => {
     }
 })
 
-adminRouter.get('/admin/dashboard', googleAuthRouter, (req, res)=> {
+adminRouter.get('/admin/dashboard', adminAuth, (req, res)=> {
     res.json({
         success:true,
         message:"Admin login successfully"

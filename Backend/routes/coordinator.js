@@ -116,7 +116,7 @@ coordinatorRouter.post('/signout', (req, res) => {
 
 // Coordinator access there profile and perform the CURD operation
 
-coordinatorRouter.get('/coordinator/dashboard',googleAuthRouter, (req, res)=>{
+coordinatorRouter.get('/coordinator/dashboard',coodinatorAuth, (req, res)=>{
     res.json({
         success:true,
         message:"Coordinator login successfully"
