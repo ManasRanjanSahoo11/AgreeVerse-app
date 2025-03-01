@@ -59,7 +59,7 @@ passport.use(new GoogleStrategy(
                 { expiresIn: "1d" }
             );
 
-            return done(null, { user, token });
+            return done(null, { user, token }); //Return user and user
         } catch (error) {
             return done(error, null);
         }

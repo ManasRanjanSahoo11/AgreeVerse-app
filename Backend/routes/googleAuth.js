@@ -9,9 +9,23 @@ googleAuthRouter.get('/google', passport.authenticate('google', { scope: ['profi
 googleAuthRouter.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
+
+        // Setting up JWT 
+        const { user, token } = req.user // Extract user and token
+
+        if (token) {
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000
+            })
+        }
+        
+
         // Redirect user based on role
         const role = req.user.constructor.modelName.toLowerCase();
-        
+
         // Ensure the role is correctly set in session
         req.session.role = role; // Or handle it in another way
 
