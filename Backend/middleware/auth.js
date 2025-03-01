@@ -1,27 +1,24 @@
-const jwt = require('jsonwebtoken')
-const { userModel } = require('../models/db')
+const jwt = require('jsonwebtoken');
+const { User, Admin, Coordinator, Farmer } = require('../models/db');
 
-function userAuth(req, res, next) {
+async function userAuth(req, res, next) {
     try {
-        const token = req.header("token")
-
+        const token = req.header("token");
         if (!token) {
             throw new Error('Authentication required');
         }
 
-        const decodedData = jwt.verify(token, process.env.JWT_SECRET)
+        const decodedData = jwt.verify(token, process.env.JWT_SECRET);
 
-        const user = userModel.findOne({
-            _id: decodedData._id
-        })
-
+        // Assuming User is your default model
+        const user = await User.findOne({ _id: decodedData.id });
         if (!user) {
-            return res.status(404).send("User not found")
+            return res.status(404).send("User not found");
         }
 
-        // Attach user to request
+        // Attach user to request for later use
         req.user = user;
-        next()
+        next();
     } catch (err) {
         res.status(401).json({
             error: 'Authentication failed',
@@ -30,41 +27,79 @@ function userAuth(req, res, next) {
     }
 }
 
-function adminAuth(req, res, next) {
-
-}
-
-function coodinatorAuth(req, res, next) {
-
-}
-
-function farmerAuth(req, res, next) {
+async function adminAuth(req, res, next) {
     try {
-        const token = req.headers.token;
-
+        const token = req.header("token");
         if (!token) {
-            return res.status(401).send("unauthorized")
+            throw new Error('Authentication required');
         }
 
-        const decodedData = jwt.verify(token, JWT_SECRET)
-
-        if (decodedData) {
-            req.farmerId = decodedData.farmerId
-            next()
+        const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+        const admin = await Admin.findOne({ _id: decodedData.id });
+        if (!admin) {
+            return res.status(404).send("Admin not found");
         }
 
+        req.admin = admin;
+        next();
     } catch (err) {
-        console.log(err);
+        res.status(401).json({
+            error: 'Authentication failed',
+            details: err.message
+        });
+    }
+}
+
+async function coordinatorAuth(req, res, next) {
+    try {
+        const token = req.header("token");
+        if (!token) {
+            throw new Error('Authentication required');
+        }
+
+        const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+        const coordinator = await Coordinator.findOne({ _id: decodedData.id });
+        if (!coordinator) {
+            return res.status(404).send("Coordinator not found");
+        }
+
+        req.coordinator = coordinator;
+        next();
+    } catch (err) {
+        res.status(401).json({
+            error: 'Authentication failed',
+            details: err.message
+        });
+    }
+}
+
+async function farmerAuth(req, res, next) {
+    try {
+        const token = req.header("token");
+        if (!token) {
+            return res.status(401).send("Unauthorized");
+        }
+
+        const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+        const farmer = await Farmer.findOne({ _id: decodedData.id });
+        if (!farmer) {
+            return res.status(404).send("Farmer not found");
+        }
+
+        req.farmer = farmer;
+        next();
+    } catch (err) {
         res.status(401).json({
             success: false,
-            message: "unauthorized"
-        })
+            message: "Unauthorized",
+            details: err.message
+        });
     }
 }
 
 module.exports = {
     userAuth,
     adminAuth,
-    coodinatorAuth,
+    coordinatorAuth,
     farmerAuth
-}
+};
