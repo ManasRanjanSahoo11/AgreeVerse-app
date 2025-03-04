@@ -11,6 +11,7 @@ const { adminRouter } = require('./routes/admin')
 const { coordinatorRouter } = require('./routes/coordinator');
 const { farmerRouter } = require('./routes/farmer');
 const googleAuthRouter = require('./routes/googleAuth')
+const paymentRouter = require('./routes/payment')
 
 const app = express();
 
@@ -39,6 +40,8 @@ app.use('/api/v1/user', userRouter)
 app.use('/api/v1/admin', adminRouter)
 app.use('/api/v1/coordinator', coordinatorRouter)
 app.use('/api/v1/farmer', farmerRouter)
+
+app.use('/api/v1', paymentRouter)
 
 //connect to mongoDB and start the server
 async function main() {
