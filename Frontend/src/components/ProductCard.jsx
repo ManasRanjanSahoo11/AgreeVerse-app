@@ -19,7 +19,7 @@ const ProductCard = ({imageUrl,productName, category, price }) => {
             
             className="text-white bg-[#F0B90B] cursor-pointer font-medium rounded-lg text-sm px-5 py-2 text-center"
           >
-            Add to cart
+            Purchese now
           </button>
         </div>
       </div>

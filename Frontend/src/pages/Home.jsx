@@ -8,7 +8,7 @@ function Home() {
   return (
     <div className='w-full bg-[#181a20]'>
       <Navbar />
-      <main className='mx-auto w-[97vw]'>
+      {/* <main className='mx-auto w-[97vw]'>
         <Carousel />
 
         <div className='text-white py-10'>
@@ -21,28 +21,10 @@ function Home() {
               category="fresh!"
               price= "599"
             />
-            <ProductCard
-              imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/1024px-Tomato_je.jpg"
-              productName="Tomoto"
-              category="fresh!"
-              price= "599"
-            />
-            <ProductCard
-              imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/1024px-Tomato_je.jpg"
-              productName="Tomoto"
-              category="fresh!"
-              price= "599"
-            />
-            <ProductCard
-              imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/1024px-Tomato_je.jpg"
-              productName="Tomoto"
-              category="fresh!"
-              price= "599"
-            />
           </div>
         </div>
       </main>
-      <Footer/>
+      <Footer/> */}
     </div>
   )
 }
