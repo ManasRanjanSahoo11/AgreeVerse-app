@@ -58,7 +58,7 @@ const Carousel = () => {
 
   return (
     <div id="controls-carousel" className="relative w-[97vw] my-1" data-carousel="static">
-      <div className="relative h-56 overflow-hidden rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl md:h-80">
+      <div className="relative h-56 overflow-hidden rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl md:h-72">
         {slides.map((slide, index) => (
           <div 
             key={slide.id}

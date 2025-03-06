@@ -140,12 +140,12 @@ function Navbar() {
           {/* Popup */}
           {isHover && (
             <div className="absolute top-full transform -translate-x-1/2 w-48 bg-zinc-700 text-white rounded-lg shadow-lg py-3 mt-1 z-50">
-              <a href="" className="flex items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] text-sm">
+              <a href="" className="flex items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
                 <span className="font-semibold">Signup</span>
                 <MoveRight />
               </a>
 
-              <a href="" className="flex mt-1 items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] text-sm">
+              <a href="" className="flex mt-1 items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
                 <span className="font-semibold">Signin</span>
                 <MoveRight />
               </a>
