@@ -1,27 +1,35 @@
 import React from 'react';
+import { Clock } from 'lucide-react';
 
-const ProductCard = ({imageUrl,productName, category, price }) => {
+const ProductCard = ({ product }) => {
   return (
-    <div className="w-full my-5 overflow-hidden max-w-[22vw] bg-[#1e2329] border rounded-lg shadow-sm border-gray-700">
-      <img className="w-full h-[32vh] object-cover" src={imageUrl} alt={`${productName}`} />
+    <div className="w-60 text-white my-4 rounded-xl bg-[#1e2329] border border-gray-700 shadow-sm overflow-hidden">
 
-      <div className="px-5 pb-5">
-        <div>
-          <h5 className="text-xl font-semibold py-2 text-white">{productName}</h5>
-          <span className="inline-flex items-center px-2.5 py-1 bg-orange-400 text-white text-xs font-medium rounded-full">
-            {category}
-          </span>
+      <div className='relative'>
+        <img src={product.image} alt={product.title} className='w-full h-48 object-cover hover:scale-105 transition ease-in' />
+      </div>
+
+      {/* Product Details */}
+      <div className="p-3">
+
+        {/* Product Title */}
+        <h3 className="font-bold text-lg mb-0.5 line-clamp-1">{product.title}</h3>
+
+        {/* Quantity */}
+        <p className="text-gray-600 mb-4">{product.quantity}</p>
+
+        {/* Price */}
+        <div className="text-sm ml-2">
+          <span className="font-bold text-lg">₹{product.price}</span>
         </div>
 
-        <div className="pt-2 flex items-center justify-between">
-          <span className="text-2xl font-bold text-gray-900 dark:text-white">{`$${price}`}</span>
-          <button
-            
-            className="text-white bg-[#F0B90B] cursor-pointer font-medium rounded-lg text-sm px-5 py-2 text-center"
-          >
-            Purchese now
-          </button>
-        </div>
+        {/*Buy mow */}
+        <button
+          onClick={product.onAddToCart}
+          className="w-full rounded-md py-1.5 cursor-pointer mt-2 text-pink-500 font-medium border border-pink-500 hover:bg-[#F0B90B] hover:text-white transition"
+        >
+          Buy Now
+        </button>
       </div>
     </div>
   );

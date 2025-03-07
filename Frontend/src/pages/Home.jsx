@@ -4,12 +4,25 @@ import Carousel from '../components/Carousel'
 import Card from '../components/Card'
 import ProductCard from '../components/ProductCard'
 import Footer from '../components/Footer'
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { ProductContext } from '../useContext/productContext'
+import HowItWorks from '../components/HowItWork'
+
+import fruitImage from "../assets/fruits.png";
+import vegetablesImage from "../assets/vegetables.png";
+import grainsImage from "../assets/grains.png";
 
 function Home() {
   const [products] = useContext(ProductContext)
   console.log(products);
+
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+    console.log(`Selected category: ${category}`);
+    // You can add additional functionality here
+  };
 
   return (
     <div className='w-full bg-[#181a20]'>
@@ -17,30 +30,39 @@ function Home() {
       <main className='mx-auto w-[97vw]'>
         <Carousel />
 
-        <div className='flex justify-between items-center px-16'>
-          <Card bgColor={"bg-orange-400"} title={"Vegitables"} description={"i am manas"} cropImage={"http://static.vecteezy.com/system/resources/previews/000/303/561/non_2x/various-vegetables-in-a-basket-vector.jpg"} />
-          <Card bgColor={"bg-orange-400"} title={"Vegitables"} description={"i am manas"} cropImage={"http://static.vecteezy.com/system/resources/previews/000/303/561/non_2x/various-vegetables-in-a-basket-vector.jpg"} />
-          <Card bgColor={"bg-orange-400"} title={"Vegitables"} description={"i am manas"} cropImage={"http://static.vecteezy.com/system/resources/previews/000/303/561/non_2x/various-vegetables-in-a-basket-vector.jpg"} />
+        <div className='flex justify-between items-center py-10 mx-16'>
+          <Card bgColor={"bg-green-200"} title={"Vegetables"} cropImage={vegetablesImage} />
+          <Card bgColor={"bg-orange-200"} title={"Fruits"} cropImage={fruitImage} />
+          <Card bgColor={"bg-yellow-200"} title={"grains"} cropImage={grainsImage} />
         </div>
 
-        <div>
-          <h2>All Our Products </h2>
+        <div className='bg-[#1e2329] mt-8 pb-20'>
+          <h2 className='text-3xl text-white text-center font-semibold py-10'>All Our Products </h2>
 
-          <div>
-            <button className='px-10 py-1.5 bg-green-400 capitalize font-semibold text-white mr-3 rounded-full hover:bg-green-500 cursor-pointer transition'>All</button>
-            <button className='px-10 py-1.5 bg-green-400 capitalize font-semibold text-white mr-3 rounded-full hover:bg-green-500 cursor-pointer transition'>vegetable </button>
-            <button className='px-10 py-1.5 bg-green-400 capitalize font-semibold text-white mr-3 rounded-full hover:bg-green-500 cursor-pointer transition'>fruit</button>
-            <button className='px-10 py-1.5 bg-green-400 capitalize font-semibold text-white mr-3 rounded-full hover:bg-green-500 cursor-pointer transition'>grain</button>
+          <div className="flex flex-col items-center">
+            <div className="flex justify-center flex-wrap gap-3 py-4">
+              {['All', 'vegetable', 'fruit', 'grain'].map((category, index) => (
+                <button
+                  key={index}
+                  className={`px-10 py-1.5 capitalize font-semibold text-white rounded-full cursor-pointer border border-gray-700 transition ${selectedCategory === category ? 'bg-green-500' : 'bg-[#1e2329] hover:bg-green-500'
+                    }`}
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className='flex items-center justify-between py-5 flex-wrap'>
+          <div className='flex items-center justify-between flex-wrap px-10'>
             {
-              products.map((item, index)=>(
-                <ProductCard product={item} key={index}/>
+              products.map((item, index) => (
+                <ProductCard product={item} key={index} />
               ))
             }
           </div>
         </div>
+        <HowItWorks />
       </main>
       <Footer />
     </div>
