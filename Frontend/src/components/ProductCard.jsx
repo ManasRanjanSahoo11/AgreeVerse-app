@@ -2,7 +2,7 @@ import React from 'react';
 
 const ProductCard = ({imageUrl,productName, category, price }) => {
   return (
-    <div className="w-full overflow-hidden max-w-[22vw] bg-[#1e2329] border rounded-lg shadow-sm border-gray-700">
+    <div className="w-full my-5 overflow-hidden max-w-[22vw] bg-[#1e2329] border rounded-lg shadow-sm border-gray-700">
       <img className="w-full h-[32vh] object-cover" src={imageUrl} alt={`${productName}`} />
 
       <div className="px-5 pb-5">
