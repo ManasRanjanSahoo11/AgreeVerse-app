@@ -1,20 +1,20 @@
 # Welcome! to AgreeVerse App 👋👋🏿👋🏽
 
 ## Project Overview
-This full-stack web application was built using React for the frontend, Node.js with Express for the backend, and MongoDB as the database. The application follows the MVC architecture and provides a seamless user experience.
+This full-stack web application was built using React for the front end, Node.js with Express for the back end, and MongoDB as the database. It follows the MVC architecture and provides a seamless user experience.
 
 ## Features
-- User authentication (JWT-based authentication)
+- User authentication (JWT-based authentication, and Google authentication using passport.js)
 - CRUD operations
 - Responsive UI with React & Tailwind CSS
 - RESTful API built with Express.js
 - MongoDB database for data storage
-- State management using React Context API/Redux (if applicable)
+- State management using React Context API
 
 ## Tech Stack
 ### Frontend:
 - **React.js**
-- **Tailwind CSS/Material UI** (choose one based on your project)
+- **Tailwind CSS**
 - **React Router**
 - **Axios** for API calls
 
@@ -23,6 +23,7 @@ This full-stack web application was built using React for the frontend, Node.js 
 - **Express.js**
 - **MongoDB & Mongoose**
 - **JWT Authentication**
+- **Google Authentication** using passport.js
 - **bcrypt** for password hashing
 
 ## Installation and Setup
@@ -47,11 +48,11 @@ cd AgreeVerse-app
    ```sh
    npm install
    ```
-3. Create a `.env` file in the `backend` folder and add the following environment variables.
+3. Create a `.env` file in the `backend` folder and add the following environment variables that are present in `.env.example` file.
    
 4. Start the backend server:
    ```sh
-   npm start
+   node server.js
    ```
    The server should be running on `http://localhost:8080`
 
@@ -70,26 +71,6 @@ cd AgreeVerse-app
    ```
    The frontend should be running on `http://localhost:5173`
 
-## Folder Structure
-```
-project-root/
-├── backend/
-│   ├── models/
-│   ├── routes/
-│   ├── server.js
-│   ├── .env
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── context/
-│   │   ├── App.js
-│   │   ├── index.js
-│   ├── package.json
-│   ├── tailwind.config.js
-├── README.md
-```
-
 ## Contribution
 Feel free to fork this repository and make pull requests. Follow these steps:
 1. **Fork the repository**.
@@ -100,4 +81,3 @@ Feel free to fork this repository and make pull requests. Follow these steps:
 ---
 
 **Happy Coding folks! 🚀**
-
