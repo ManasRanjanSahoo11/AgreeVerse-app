@@ -3,10 +3,10 @@ import { Clock } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
   return (
-    <div className="w-60 text-white my-4 rounded-xl bg-[#1e2329] border border-gray-700 shadow-sm overflow-hidden">
+    <div className="w-60 hover:cursor-pointer text-white my-4 rounded-xl bg-[#1e2329] border border-gray-700 shadow-sm overflow-hidden">
 
       <div className='relative'>
-        <img src={product.image} alt={product.title} className='w-full h-48 object-cover hover:scale-105 transition ease-in' />
+        <img src={product.image} alt={product.title} className='w-full h-48 object-cover hover:scale-105 duration-250 transition ease-in' />
       </div>
 
       {/* Product Details */}
@@ -26,7 +26,7 @@ const ProductCard = ({ product }) => {
         {/*Buy mow */}
         <button
           onClick={product.onAddToCart}
-          className="w-full rounded-md py-1.5 cursor-pointer mt-2 text-pink-500 font-medium border border-pink-500 hover:bg-[#F0B90B] hover:text-white transition"
+          className="w-full rounded-md py-1.5 cursor-pointer mt-2 text-gray-200 font-medium border border-gray-700 hover:text-gray-100 hover:border-white duration-200 ease-in-out transition"
         >
           Buy Now
         </button>

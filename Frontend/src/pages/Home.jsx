@@ -44,7 +44,7 @@ function Home() {
               {['All', 'vegetable', 'fruit', 'grain'].map((category, index) => (
                 <button
                   key={index}
-                  className={`px-10 py-1.5 capitalize font-semibold text-white rounded-full cursor-pointer border border-gray-700 transition ${selectedCategory === category ? 'bg-green-500' : 'bg-[#1e2329] hover:bg-green-500'
+                  className={`px-10 py-1.5 capitalize font-semibold text-white rounded-full cursor-pointer border border-gray-700 transition ${selectedCategory === category ? 'bg-green-500' : 'bg-[#1e2329] hover:bg-zinc-700'
                     }`}
                   onClick={() => handleCategoryClick(category)}
                 >
