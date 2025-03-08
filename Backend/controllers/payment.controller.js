@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const { createRazorpayInstance } = require('../config/razorpay.config')
+const createRazorpayInstance = require('../config/razorpay.config')
 const { cropModel } = require('../models/db')
 
 const razorpayInstance = createRazorpayInstance()

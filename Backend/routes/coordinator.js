@@ -4,8 +4,7 @@ const bcrypt = require('bcrypt')
 const coordinatorRouter = express.Router()
 const dotenv = require('dotenv')
 const { Coordinator, Farmer } = require('../models/db')
-const { coodinatorAuth } = require('../middleware/auth')
-const googleAuthRouter = require('./googleAuth')
+const { coordinatorAuth } = require('../middleware/auth')
 
 dotenv.config()
 
@@ -116,15 +115,15 @@ coordinatorRouter.post('/signout', (req, res) => {
 
 // Coordinator access there profile and perform the CURD operation
 
-coordinatorRouter.get('/coordinator/dashboard',coodinatorAuth, (req, res)=>{
+coordinatorRouter.get('/coordinator/dashboard', coordinatorAuth, (req, res) => {
     res.json({
-        success:true,
-        message:"Coordinator login successfully"
+        success: true,
+        message: "Coordinator login successfully"
     })
 })
 
 // Add farmer
-coordinatorRouter.post('/:coordinatorId/add-farmer', coodinatorAuth, async (req, res) => {
+coordinatorRouter.post('/:coordinatorId/add-farmer', coordinatorAuth, async (req, res) => {
     try {
         const { coordinatorId } = req.params;
         const { name, email, phoneNo, password } = req.body;
@@ -138,8 +137,8 @@ coordinatorRouter.post('/:coordinatorId/add-farmer', coodinatorAuth, async (req,
         }
 
         // Check if farmer already exists
-        const farmer = await Farmer.findOne({ 
-            $or: [{ email }, { phoneNo }] 
+        const farmer = await Farmer.findOne({
+            $or: [{ email }, { phoneNo }]
         });
 
         if (farmer) {
@@ -182,7 +181,7 @@ coordinatorRouter.post('/:coordinatorId/add-farmer', coodinatorAuth, async (req,
 });
 
 // Update farmer
-coordinatorRouter.put('/:coordinatorId/update-farmer/:farmerId', coodinatorAuth, async (req, res) => {
+coordinatorRouter.put('/:coordinatorId/update-farmer/:farmerId', coordinatorAuth, async (req, res) => {
     try {
         const { coordinatorId, farmerId } = req.params;
         const updateData = req.body;
@@ -226,7 +225,7 @@ coordinatorRouter.put('/:coordinatorId/update-farmer/:farmerId', coodinatorAuth,
 });
 
 // Delete farmer
-coordinatorRouter.delete('/:coordinatorId/delete-farmer/:farmerId', coodinatorAuth, async (req, res) => {
+coordinatorRouter.delete('/:coordinatorId/delete-farmer/:farmerId', coordinatorAuth, async (req, res) => {
     try {
         const { coordinatorId, farmerId } = req.params;
 
@@ -261,10 +260,10 @@ coordinatorRouter.delete('/:coordinatorId/delete-farmer/:farmerId', coodinatorAu
 });
 
 // Get all farmers
-coordinatorRouter.get('/:coordinatorId/all-farmers', coodinatorAuth, async (req, res) => {
+coordinatorRouter.get('/:coordinatorId/all-farmers', coordinatorAuth, async (req, res) => {
     try {
         const { coordinatorId } = req.params;
-        
+
         // Add pagination
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -298,6 +297,4 @@ coordinatorRouter.get('/:coordinatorId/all-farmers', coodinatorAuth, async (req,
     }
 });
 
-module.exports = {
-    coordinatorRouter
-}
+module.exports = coordinatorRouter

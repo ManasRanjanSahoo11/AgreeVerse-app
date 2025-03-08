@@ -99,7 +99,7 @@ async function farmerAuth(req, res, next) {
 
 module.exports = {
     userAuth,
-    adminAuth,
+    adminAuth,  
     coordinatorAuth,
     farmerAuth
 };

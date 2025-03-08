@@ -7,8 +7,8 @@ const dotenv = require('dotenv')
 dotenv.config();
 
 const { userRouter } = require('./routes/user')
-const { adminRouter } = require('./routes/admin')
-const { coordinatorRouter } = require('./routes/coordinator');
+const adminRouter = require('./routes/admin')
+const coordinatorRouter = require('./routes/coordinator');
 const { farmerRouter } = require('./routes/farmer');
 const googleAuthRouter = require('./routes/googleAuth')
 const paymentRouter = require('./routes/payment')
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(cors({
     origin: 'http://localhost:5173', // frontend URL
-    credentials:true
+    credentials: true
 }));
 
 //Session Middleware
@@ -47,7 +47,7 @@ app.use('/api/v1', paymentRouter)
 async function main() {
     try {
         await mongoose.connect(process.env.CONN_STRING)
-        console.log('Connected to MongoDB');   
+        console.log('Connected to MongoDB');
     } catch (err) {
         return console.log("Error! while connecting BD " + err);
         process.exit(1); // Exit
