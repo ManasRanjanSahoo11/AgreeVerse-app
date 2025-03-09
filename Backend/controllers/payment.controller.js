@@ -1,47 +1,55 @@
 const crypto = require('crypto')
 const createRazorpayInstance = require('../config/razorpay.config')
-const { cropModel } = require('../models/db')
 
 const razorpayInstance = createRazorpayInstance()
 
+// only order the payment 
 const createOrder = async (req, res) => {
-    const { cropId } = req.body
 
-    const cropDes = await cropModel.findOne({ cropId })
+    /*
+    => Always fetch price from DB.
+    
+    const { productId } = req.body
 
-    if (!cropDes) {
+    const product = await cropModel.findOne({ productId })
 
+    if (!product) {
+        res.status(401).json({
+            success:false,
+            message:"Crop not found"
+        })
     }
+
+    const amount = product.price;
+    */
+
+    const { price } = req.body;
+
+    if (!price) {
+        return res.status(400).json({
+            success: false,
+            message: "Price is required"
+        });
+    }
+
+    console.log(price);
 
     // Create order
     const options = {
-        amount: amount * 100, // amount in the smallest currency unit
+        amount: price * 100, // amount in the smallest currency unit
         currency: 'INR',
-        receipt: 'receipt_order_1'
+        receipt: 'receipt_order_' + Date.now()
     }
 
+    const order = await razorpayInstance.orders.create(options)
 
-    try {
-        razorpayInstance.orders.create(options, (err, order) => {
-            if (err) {
-                return res.status(200).json({
-                    success: false,
-                    message: "Something went wrong"
-                })
-            }
-
-            res.status(200).json(order)
-        })
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
+    res.status(200).json({
+        success: true,
+        order,
+    });
 }
 
+// make payment
 const verifyPayment = async (req, res) => {
     const { order_id, payment_id, signature } = req.body;
 
