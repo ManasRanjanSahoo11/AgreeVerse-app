@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Carousel from '../components/Carousel'
 import Card from '../components/Card'
@@ -57,7 +58,9 @@ function Home() {
           <div className='flex items-center justify-between flex-wrap px-10'>
             {
               products.map((item, index) => (
-                <ProductCard product={item} key={index} />
+                <Link to={`/product/${item.id}`}>
+                  <ProductCard product={item} key={index} />
+                </Link>
               ))
             }
           </div>

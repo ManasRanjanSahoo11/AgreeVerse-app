@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Loading from "../components/Loading";
 import { CircleArrowRight, CircleArrowLeft, Truck } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import axios from "axios";
 
-const ProductDetails = () => {
+const ProductDetailsAndPayment = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -15,15 +17,14 @@ const ProductDetails = () => {
         country: "",
     });
 
-    // Simulating useParams hook functionality
-    const productId = 1;
+    const { productId } = useParams();
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 setLoading(true);
                 const response = await fetch(
-                    `https://fakestoreapi.com/products/${productId || 1}`
+                    `https://fakestoreapi.com/products/${productId}`
                 );
 
                 if (!response.ok) {
@@ -51,25 +52,61 @@ const ProductDetails = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const SubmitAndCheckoutHandler = async (e) => {
         e.preventDefault();
         alert("Delivery address submitted successfully!");
         console.log("Delivery Address:", deliveryAddress);
+
+        try {
+
+            const { data: { order } } = await axios.post('http://localhost:8080/api/v1/verifyPayment', {
+                price: product.price
+            });
+
+            const options = {
+                key: process.env.RAZORPAY_KEY_ID,
+                amount: order.amount,
+                currency: "INR",
+                name: "AgreeVerse app",
+                description: "RazorPay",
+                image: "",
+                order_id: order.id,
+                callback_url: "http://localhost:8080/api/v1/",
+                prefill: {
+                    name: "AgreeVerse app",
+                    email: "manasranjansahoo971@gmail.com",
+                    contact: process.env.PHONE
+                },
+                notes: {
+                    "address": "Razorpay Corporate Office"
+                },
+                theme: {
+                    "color": "#121212"
+                }
+            };
+
+            const razor = new window.Razorpay(options);
+            razor.open();
+
+        } catch (error) {
+            console.error("Payment initialization error:", error);
+            alert("Failed to initialize payment. Please try again.");
+        }
     };
 
-    if(loading){
+    if (loading) {
         return <Loading />
     }
 
     if (error) {
         return (
-            <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center max-w-md">
-                    <p className="text-red-400 text-lg mb-3">Error loading product</p>
-                    <p className="text-gray-300 text-sm">{error}</p>
-                    <button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition text-sm">
-                        Return to shop
-                    </button>
+            <div className="bg-zinc-900 min-h-screen flex items-center justify-center p-4">
+                <div className="border border-gray-700 p-6 rounded-lg shadow-lg text-center max-w-md">
+                    <p className="text-red-400 text-lg mb-3">Something went wrong!</p>
+
+                    <Link to={'/'} className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition text-sm">
+                        Home
+                    </Link>
                 </div>
             </div>
         );
@@ -79,10 +116,10 @@ const ProductDetails = () => {
         <div className="min-h-screen bg-gray-900 py-4 sm:py-6">
             <div className="container mx-auto px-4">
                 {/* Back Button */}
-                <button className="text-white hover:text-orange-300 cursor-pointer font-medium mb-4 flex items-center gap-1 transition-colors text-md">
+                <Link to={'..'} className="text-white hover:text-orange-300 cursor-pointer font-medium mb-4 flex items-center gap-1 transition-colors text-md">
                     <CircleArrowLeft size={16} />
                     Back
-                </button>
+                </Link>
 
                 {/* Product Details */}
                 <div className="py-5 px-2 border border-gray-700 rounded-lg shadow-lg overflow-hidden">
@@ -118,7 +155,7 @@ const ProductDetails = () => {
 
                                 <div className="flex items-center mb-4">
                                     <div className="text-2xl font-bold text-white">
-                                        Price: ${product.price?.toFixed(2)}
+                                        Price: ₹{product.price?.toFixed(2)}
                                     </div>
                                 </div>
 
@@ -128,7 +165,7 @@ const ProductDetails = () => {
                                         <Truck size={16} className="mr-2 text-blue-400" />
                                         Delivery Address
                                     </h2>
-                                    <form onSubmit={handleSubmit} className="space-y-3">
+                                    <form onSubmit={SubmitAndCheckoutHandler} className="space-y-3">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {/* Form fields with consistent height */}
                                             {[
@@ -179,4 +216,4 @@ const ProductDetails = () => {
     ) : null;
 };
 
-export default ProductDetails;
+export default ProductDetailsAndPayment;
