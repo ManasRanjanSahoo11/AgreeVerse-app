@@ -58,30 +58,47 @@ const ProductDetailsAndPayment = () => {
         console.log("Delivery Address:", deliveryAddress);
 
         try {
-
-            const { data: { order } } = await axios.post('http://localhost:8080/api/v1/verifyPayment', {
+            const { data: { order } } = await axios.post('http://localhost:8080/api/v1/createOrder', {
                 price: product.price
             });
 
             const options = {
-                key: process.env.RAZORPAY_KEY_ID,
+                key: import.meta.env.RAZORPAY_KEY_ID,
                 amount: order.amount,
                 currency: "INR",
                 name: "AgreeVerse app",
-                description: "RazorPay",
+                description: "Test Transaction",
                 image: "",
                 order_id: order.id,
-                callback_url: "http://localhost:8080/api/v1/",
-                prefill: {
-                    name: "AgreeVerse app",
-                    email: "manasranjansahoo971@gmail.com",
-                    contact: process.env.PHONE
+                // Remove callback_url and add handler instead
+                handler: function (response) {
+                    // This function will be called after payment success/failure
+                    axios.post('http://localhost:8080/api/v1/verifyPayment', {
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                        .then(response => {
+                            alert("Payment successful!");
+                            // Redirect or update UI as needed
+                        })
+                        .catch(error => {
+                            alert("Payment verification failed");
+                            console.error("Payment verification error:", error);
+                        });
+                },
+
+                // login user details
+                "prefill": {
+                    "name": "100xManas",
+                    "email": "manasranjansahoo971@gmail.com",
+                    "contact": "9000090000"
                 },
                 notes: {
                     "address": "Razorpay Corporate Office"
                 },
                 theme: {
-                    "color": "#121212"
+                    "color": "#3399cc"
                 }
             };
 
