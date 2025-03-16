@@ -63,6 +63,9 @@ const verifyPayment = async (req, res) => {
     const generatedSignature = hmac.digest("hex");
 
     if (generatedSignature === signature) {
+
+        //need to store payment details to the DB.
+
         return res.status(200).json({
             success: true,
             message: "Payment verified successfully."
@@ -74,5 +77,13 @@ const verifyPayment = async (req, res) => {
         })
     }
 }
+
+// const verifyPayment = async (req, res) => {
+//     console.log(req.body);
+
+//     res.status(200).json({
+//         success: true
+//     })
+// }
 
 module.exports = { createOrder, verifyPayment }

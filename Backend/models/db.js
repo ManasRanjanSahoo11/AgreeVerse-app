@@ -35,6 +35,16 @@ const cropSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+const deliveryAddressSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    zip: { type: Number, required: true },
+    country: { type: String, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
+});
+
 const userPurchasedCropSchema = new mongoose.Schema({
     userId: { type: mongoose.Types.ObjectId, ref: "User", required: true },
     purchasedCrops: { type: [mongoose.Types.ObjectId], ref: "Crop", required: true },
@@ -43,6 +53,7 @@ const userPurchasedCropSchema = new mongoose.Schema({
     paymentMethod: { type: String, enum: ['credit_card', 'debit_card', 'upi', 'netbanking'] },
     paymentStatus: { type: String, enum: ['pending', 'completed', 'failed', 'refunded'], },
     totalAmount: { type: Number, required: true },
+    deliveryAddress: { type: deliveryAddressSchema, required: true },
     purchasedAt: { type: Date, default: Date.now },
 })
 
