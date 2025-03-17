@@ -4,6 +4,7 @@ import Signup from "./pages/Signup"
 import Signin from "./pages/Signin"
 import PageNotFound from "./pages/PageNotFound";
 import ProductDetailsAndPayment from "./pages/ProductDetailsAndPayment";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/product/:productId" element={<ProductDetailsAndPayment />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>
