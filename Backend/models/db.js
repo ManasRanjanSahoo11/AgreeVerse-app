@@ -39,15 +39,16 @@ const cropSchema = new mongoose.Schema({
 const paymentSchema = new mongoose.Schema({
     userId: { type: mongoose.Types.ObjectId, ref: "User", required: true },
     paymentId: { type: String, required: true, unique: true },
-    paymentMethod: { 
-        type: String, 
-        required: true 
+    paymentMethod: {
+        type: String,
+        required: true
     },
-    paymentStatus: { 
-        type: String, 
-        enum: ['pending', 'completed', 'failed', 'refunded'], 
-        default: 'pending' 
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'completed', 'failed', 'refunded'],
+        default: 'pending'
     },
+    amount: { type: Number },
     paymentDate: { type: Date, default: Date.now },
 })
 
@@ -56,13 +57,17 @@ const userPurchasedCropSchema = new mongoose.Schema({
     purchasedCrops: [{ type: mongoose.Types.ObjectId, ref: "Crop", required: true }],
     quantity: { type: Number },
     payment: { type: mongoose.Schema.Types.ObjectId, ref: "Payment", required: true },
-    deliveryAddress: { 
+    deliveryAddress: {
         name: { type: String, required: true },
         street: { type: String, required: true },
         city: { type: String, required: true },
         state: { type: String, required: true },
         zip: { type: String, required: true },
         country: { type: String, required: true }
+    },
+    paymentMethod: {
+        type: String,
+        required: true
     },
     purchasedAt: { type: Date, default: Date.now },
 });
@@ -75,6 +80,6 @@ const User = mongoose.model('User', userSchema);
 
 const cropModel = mongoose.model('Crop', cropSchema)
 const userPurchasedCropModel = mongoose.model('PurchasedCrop', userPurchasedCropSchema)
-const paymentModel = module.model('Payment', paymentSchema)
+const paymentModel = mongoose.model('Payment', paymentSchema)
 
 module.exports = { Admin, Coordinator, Farmer, User, cropModel, userPurchasedCropModel, paymentModel };

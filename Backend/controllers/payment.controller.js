@@ -1,89 +1,129 @@
 const crypto = require('crypto')
 const createRazorpayInstance = require('../config/razorpay.config')
+const { paymentModel, userPurchasedCropModel, cropModel } = require('../models/db')
 
 const razorpayInstance = createRazorpayInstance()
 
 // only order the payment 
 const createOrder = async (req, res) => {
 
-    /*
-    => Always fetch price from DB.
-    
-    const { productId } = req.body
+    // => Always fetch price from DB.
 
-    const product = await cropModel.findOne({ productId })
+    try {
+        const { userId, cropId, quantity } = req.body;
 
-    if (!product) {
-        res.status(401).json({
-            success:false,
-            message:"Crop not found"
+        if (!userId || !cropId || !quantity) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields (userId, cropId, quantity) are required.",
+            });
+        }
+
+        // Fetch crop price from DB
+        const crop = await cropModel.findById(cropId);
+        if (!crop) {
+            return res.status(404).json({ success: false, message: "Crop not found" });
+        }
+
+        const totalAmount = crop.price * quantity;
+
+        console.log(totalAmount);
+
+        // Create order
+        const options = {
+            amount: totalAmount * 100, // amount in the smallest currency unit
+            currency: 'INR',
+            receipt: 'receipt_order_' + Date.now()
+        }
+
+        const order = await razorpayInstance.orders.create(options)
+
+        // Store payment details in DB (Initial status = 'pending')
+        const newPayment = await paymentModel.create({
+            userId,
+            paymentId: order.id,
+            paymentMethod: "",
+            amount: totalAmount,
+            paymentStatus: "pending",
         })
-    }
 
-    const amount = product.price;
-    */
+        res.status(200).json({
+            success: true,
+            paymentId: newPayment._id,
+            order
+        });
 
-    const { price } = req.body;
-
-    if (!price) {
-        return res.status(400).json({
+    } catch (err) {
+        console.error("Error creating order:", err);
+        res.status(500).json({
             success: false,
-            message: "Price is required"
+            message: "Internal Server Error"
         });
     }
-
-    console.log(price);
-
-    // Create order
-    const options = {
-        amount: price * 100, // amount in the smallest currency unit
-        currency: 'INR',
-        receipt: 'receipt_order_' + Date.now()
-    }
-
-    const order = await razorpayInstance.orders.create(options)
-
-    res.status(200).json({
-        success: true,
-        order,
-    });
 }
+
 
 // make payment
 const verifyPayment = async (req, res) => {
-    const { order_id, payment_id, signature } = req.body;
 
-    // Create HMAC object
-    const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
+    try {
+        const { order_id, payment_id, signature, userId, cropId, quantity, deliveryAddress, paymentMethod } = req.body;
 
-    // Update the HMAC with order_id and payment_id
-    hmac.update(order_id + "|" + payment_id);
+        if (!order_id || !payment_id || !signature || !userId || !cropId || !quantity || !deliveryAddress) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required for payment verification.",
+            });
+        }
 
-    // Generate the hash signature
-    const generatedSignature = hmac.digest("hex");
+        // Verify payment signature
+        // Create HMAC object
+        const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
 
-    if (generatedSignature === signature) {
+        // Update the HMAC with order_id and payment_id
+        hmac.update(order_id + "|" + payment_id);
 
-        //need to store payment details to the DB.
+        // Generate the hash signature
+        const generatedSignature = hmac.digest("hex");
+
+        if (generatedSignature !== signature) {
+            return res.status(400).json({
+                success: false,
+                message: "Payment verification failed!",
+            });
+        }
+
+        // Update payment status in DB
+        const payment = await paymentModel.findOneAndUpdate(
+            { paymentId: order_id },
+            { paymentStatus: "completed" },
+            { new: true }
+        );
+
+        if (!payment) {
+            return res.status(404).json({ success: false, message: "Payment record not found!" });
+        }
+
+        await userPurchasedCropModel.create({
+            user: userId,
+            purchasedCrops: [cropId],
+            quantity,
+            payment: payment._id,
+            totalAmount: payment.amount,
+            paymentMethod,
+            deliveryAddress,
+            purchasedAt: Date.now(),
+        })
 
         return res.status(200).json({
             success: true,
-            message: "Payment verified successfully."
-        })
-    } else {
-        return res.status(400).json({
-            success: true,
-            message: "Payment verification failed!"
-        })
+            message: "Payment verified and purchase recorded successfully.",
+        });
+
+    } catch (error) {
+        console.error("Error verifying payment:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 }
-
-// const verifyPayment = async (req, res) => {
-//     console.log(req.body);
-
-//     res.status(200).json({
-//         success: true
-//     })
-// }
 
 module.exports = { createOrder, verifyPayment }
