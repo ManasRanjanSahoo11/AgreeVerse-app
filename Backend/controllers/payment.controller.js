@@ -1,6 +1,9 @@
 const crypto = require('crypto')
+const nodemailer = require('nodemailer')
 const createRazorpayInstance = require('../config/razorpay.config')
 const { paymentModel, userPurchasedCropModel, cropModel } = require('../models/db')
+
+require("dotenv").config(); 
 
 const razorpayInstance = createRazorpayInstance()
 
@@ -67,9 +70,9 @@ const createOrder = async (req, res) => {
 const verifyPayment = async (req, res) => {
 
     try {
-        const { order_id, payment_id, signature, userId, cropId, quantity, deliveryAddress, paymentMethod } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, cropId, quantity, deliveryAddress, paymentMethod, email } = req.body;
 
-        if (!order_id || !payment_id || !signature || !userId || !cropId || !quantity || !deliveryAddress) {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId || !cropId || !quantity || !deliveryAddress) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required for payment verification.",
@@ -81,7 +84,7 @@ const verifyPayment = async (req, res) => {
         const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
 
         // Update the HMAC with order_id and payment_id
-        hmac.update(order_id + "|" + payment_id);
+        hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
 
         // Generate the hash signature
         const generatedSignature = hmac.digest("hex");
@@ -93,9 +96,27 @@ const verifyPayment = async (req, res) => {
             });
         }
 
+        // Send Confirmation Email
+        const tranporter = nodemailer.createTransport({
+            service:"Gmail",
+            auth:{
+                user:process.env.EMAIL_USER,
+                password:process.env.EMAIL_PASSWORD
+            }
+        })
+
+        const mailOptios = {
+            from:process.env.EMAIL_USER ,
+            to:email,
+            subject: "Payment Confirmation",
+            text: `Your payment was successful. Thank you for your purchase!`
+        }
+
+        await tranporter.sendMail(mailOptios)
+
         // Update payment status in DB
         const payment = await paymentModel.findOneAndUpdate(
-            { paymentId: order_id },
+            { paymentId: razorpay_order_id },
             { paymentStatus: "completed" },
             { new: true }
         );
@@ -117,7 +138,7 @@ const verifyPayment = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Payment verified and purchase recorded successfully.",
+            message: "Payment verified, purchase recorded successfully & email sent",
         });
 
     } catch (error) {
