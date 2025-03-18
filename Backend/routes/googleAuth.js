@@ -7,7 +7,7 @@ googleAuthRouter.get('/google', passport.authenticate('google', { scope: ['profi
 
 // Google OAuth Callback
 googleAuthRouter.get('/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }),
+    passport.authenticate('google', { failureRedirect: '/signin' }),
     (req, res) => {
 
         // Setting up JWT 
