@@ -1,6 +1,6 @@
 const express = require('express')
 const bcrypt = require('bcrypt');
-const { z } = require('zod')
+const { z, string } = require('zod')
 const userRouter = express.Router()
 const { userAuth } = require("../middleware/auth");
 const jwt = require('jsonwebtoken');
@@ -9,43 +9,45 @@ const { User, cropModel, userPurchasedCropModel } = require('../models/db');
 userRouter.post('/signup', async (req, res) => {
 
     const userSignupRequiredBody = z.object({
-        name: z.string(),
+        username: z.string(), 
         email: z.string().email(),
-        phoneNo: z.string().transform(data => Number(data)),
-        password: z.string().min(6, { message: "Password must be at least 6 characters long." })
-    })
+        phone: z.string(),  
+        password: z.string(),
+        role: z.string()
+    });
 
-    const parsedData = userSignupRequiredBody.safeParse(req.body)
+    const parsedData = userSignupRequiredBody.safeParse(req.body);
+
+    const { username, email, phone, password, role } = parsedData.data;
 
     try {
-        const { name, email, phoneNo, password } = parsedData.data;
+        const existingUser = await User.findOne({ phone, email });
 
-        const exitingUser = await User.findOne({ phoneNo, email })
+        if (existingUser) {
+            return res.status(409).send("User already exists");
+        }
 
-        if (exitingUser) return res.status(409).send("User already exits")
-
-        const hash = await bcrypt.hash(password, 10)
+        const hash = await bcrypt.hash(password, 10);
 
         const newUser = await User.create({
-            name,
+            name:username,
             email,
-            phoneNo,
-            password: hash
-        })
+            phone,
+            password: hash,
+            role
+        });
 
         if (newUser) {
             res.status(201).json({
                 success: true,
                 message: "New user created successfully"
-            })
+            });
         }
-
     } catch (err) {
-        console.log(err);
-        res.status(500).send("Internal server crash")
+        console.error(err);
+        res.status(500).send("Internal server error");
     }
-
-})
+});
 
 userRouter.post('/signin', async (req, res) => {
 
