@@ -16,6 +16,9 @@ const ProductDetailsAndPayment = () => {
         zip: "",
         country: "",
     });
+    const [userId, setUserId] = useState(""); // You'll need to get this from your auth system
+    const [quantity, setQuantity] = useState(1);
+    const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
     const { productId } = useParams();
 
@@ -34,6 +37,11 @@ const ProductDetailsAndPayment = () => {
                 const data = await response.json();
                 setProduct(data);
                 setError(null);
+                
+                // You might want to fetch the user ID here if you have an auth system
+                // For example:
+                // const userData = await fetchUserData();
+                // setUserId(userData.id);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -52,14 +60,24 @@ const ProductDetailsAndPayment = () => {
         }));
     };
 
+    const handleQuantityChange = (e) => {
+        setQuantity(parseInt(e.target.value) || 1);
+    };
+
     const SubmitAndCheckoutHandler = async (e) => {
         e.preventDefault();
-        alert("Delivery address submitted successfully!");
-        console.log("Delivery Address:", deliveryAddress);
+        
+        if (!userId) {
+            alert("Please log in to continue with the purchase");
+            return;
+        }
 
         try {
             const { data: { order } } = await axios.post('http://localhost:8080/api/v1/createOrder', {
-                price: product.price
+                price: product.price * quantity,
+                productId: productId,
+                userId: userId,
+                quantity: quantity
             });
 
             const options = {
@@ -70,17 +88,34 @@ const ProductDetailsAndPayment = () => {
                 description: "Test Transaction",
                 image: "",
                 order_id: order.id,
-                // Remove callback_url and add handler instead
                 handler: function (response) {
-                    // This function will be called after payment success/failure
+                    // Updated to match your backend verification requirements
                     axios.post('http://localhost:8080/api/v1/verifyPayment', {
                         razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature
+                        razorpay_order_id: response.razorpay_order_id,      
+                        razorpay_signature: response.razorpay_signature,
+                        userId: userId,
+                        cropId: productId, // Assuming product ID is the same as crop ID
+                        quantity: quantity,
+                        deliveryAddress: {
+                            name: deliveryAddress.name,
+                            street: deliveryAddress.street,
+                            city: deliveryAddress.city,
+                            state: deliveryAddress.state,
+                            zip: deliveryAddress.zip,
+                            country: deliveryAddress.country
+                        },
+                        paymentMethod: paymentMethod,
+                        email: "manasranjansahoo971@gmail.com"  // Ideally this should come from user profile
                     })
                         .then(response => {
-                            alert("Payment successful!");
-                            // Redirect or update UI as needed
+                            if (response.data.success) {
+                                alert("Payment successful! You'll receive a confirmation email shortly.");
+                                // Redirect to orders page or success page
+                                // window.location.href = "/orders";
+                            } else {
+                                alert("Payment verification failed: " + response.data.message);
+                            }
                         })
                         .catch(error => {
                             alert("Payment verification failed");
@@ -166,13 +201,36 @@ const ProductDetailsAndPayment = () => {
                                 </h1>
 
                                 {/* Fixed height for description with scrollbar */}
-                                <div className="text-gray-300 mb-2 leading-relaxed text-sm h-12 line-clamp-3 overflow-y-auto pr-2">
+                                <div className="text-gray-300 mb-2 text-sm h-12 line-clamp-3 leading-relaxed overflow-y-auto pr-2">
                                     {product.description}
                                 </div>
 
                                 <div className="flex items-center mb-4">
-                                    <div className="text-2xl font-bold text-white">
+                                    <div className="text-md font-bold text-white">
                                         Price: ₹{product.price?.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                {/* Quantity Selector */}
+                                <div className="mb-4">
+                                    <label htmlFor="quantity" className="block text-xs font-medium text-gray-300 mb-1">
+                                        Quantity
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="quantity"
+                                        name="quantity"
+                                        min="1"
+                                        value={quantity}
+                                        onChange={handleQuantityChange}
+                                        className="block w-24 h-8 px-3 py-1 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    />
+                                </div>
+
+                                {/* Total Price */}
+                                <div className="flex items-center mb-4">
+                                    <div className="text-xl font-bold text-white">
+                                        Total: ₹{(product.price * quantity).toFixed(2)}
                                     </div>
                                 </div>
 

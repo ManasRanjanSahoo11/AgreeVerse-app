@@ -11,7 +11,7 @@ export default function Signup() {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('');
     const [showRoleModal, setShowRoleModal] = useState(false);
-    const [googleLogin, setGoogleLogin] = useState(false); // To track Google login
+    const [googleSignup, setGoogleSignup] = useState(false);
 
     const navigate = useNavigate();
 
@@ -19,14 +19,14 @@ export default function Signup() {
         e.preventDefault();
         
         setShowRoleModal(true);
-        setGoogleLogin(false); // Normal signup
+        setGoogleSignup(false);
     };
 
     const handleRoleSelection = async (selectedRole) => {
         setRole(selectedRole);
         setShowRoleModal(false);
 
-        if (googleLogin) {
+        if (googleSignup) {
             // Redirect for Google OAuth with role
             window.location.href = `http://localhost:8080/auth/google?role=${selectedRole}`;
         } else {
@@ -38,7 +38,8 @@ export default function Signup() {
                 password,
                 role: selectedRole,
             };
-
+            console.log(newUser);
+            
             try {
                 const res = await axios.post(`http://localhost:8080/api/v1/${selectedRole}/signup`, newUser);
                 if (res.data.success) {
@@ -101,7 +102,7 @@ export default function Signup() {
                             type="button"
                             className="flex w-full items-center justify-center gap-2 border-2 border-gray-300 py-2.5 rounded-lg text-md text-white hover:cursor-pointer focus:ring-gray-200 hover:bg-[#FF9119] hover:text-black focus:ring-2 focus:outline-none font-medium px-6 transition duration-300 ease-in-out"
                             onClick={() => {
-                                setGoogleLogin(true);  // Set Google login flag
+                                setGoogleSignup(true);  // Set Google login flag
                                 setShowRoleModal(true); // Show role selection modal
                             }}
                         >

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, User, MoveRight } from 'lucide-react';
+import { Search, User, MoveRight } from 'lucide-react';
+import UserProfileCard from './UserProfileCard';
 
 function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,6 +154,8 @@ function Navbar() {
           )}
         </div>
       </div>
+
+      <UserProfileCard />
     </header>
   );
 }
