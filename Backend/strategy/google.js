@@ -1,5 +1,5 @@
 const passport = require('passport');
-const axios = require('axios')
+const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Admin, Coordinator, Farmer, User } = require('../models/db');
@@ -14,9 +14,8 @@ passport.use(new GoogleStrategy(
         passReqToCallback: true, // Allow access to request
     },
     async (req, accessToken, refreshToken, profile, done) => {
-        console.log(profile) //for debug
-
-        const { id, displayName, emails } = profile;
+        
+        const { id, displayName, emails, picture } = profile;
         const email = emails[0].value;
 
         try {
@@ -46,6 +45,7 @@ passport.use(new GoogleStrategy(
                 name: displayName,
                 email: email,
                 googleId: id,
+                googleProfilePicture:picture,
                 role,
             };
 

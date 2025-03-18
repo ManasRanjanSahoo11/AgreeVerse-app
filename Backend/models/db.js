@@ -6,6 +6,7 @@ const commonFields = {
     phone: { type: String },
     password: { type: String, sparse: true },
     googleId: { type: String, unique: true }, // Store Google OAuth ID
+    googleProfilePicture: { type: String },
     role: { type: String },
     createdAt: { type: Date, default: Date.now },
 };

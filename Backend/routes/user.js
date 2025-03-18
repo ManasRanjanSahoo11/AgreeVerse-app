@@ -117,7 +117,8 @@ userRouter.post('/signout', (req, res) => {
 userRouter.get('/user/dashboard', userAuth, (req, res) => {
     res.json({
         success: true,
-        message: "User login successfully"
+        message: "User login successfully",
+        user:req.user,
     })
 })
 
