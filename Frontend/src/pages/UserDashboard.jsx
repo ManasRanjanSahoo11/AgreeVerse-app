@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Leaf, ShoppingCart, Settings, LogOut } from 'lucide-react';
+import { Home, ShoppingCart, LogOut } from 'lucide-react';
 
 function UserDashboard() {
   return (
