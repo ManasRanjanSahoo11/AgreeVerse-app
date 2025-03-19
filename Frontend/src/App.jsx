@@ -6,6 +6,13 @@ import PageNotFound from "./pages/PageNotFound";
 import ProductDetailsAndPayment from "./pages/ProductDetailsAndPayment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 
+import ProtectedRoute from './auth/ProtectedRoute'
+
+import UserDashboard from "./pages/UserDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import CoordinatorDashboard from "./pages/CoordinatorDashboard";
+import FarmerDashboard from "./pages/FarmerDashboard";
+
 function App() {
 
   return (
@@ -15,7 +22,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
 
-        <Route path="/user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+        <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/coordinator/dashboard" element={<ProtectedRoute><CoordinatorDashboard /></ProtectedRoute>} />
         <Route path="/farmer/dashboard" element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />
