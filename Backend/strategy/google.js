@@ -14,7 +14,7 @@ passport.use(new GoogleStrategy(
         passReqToCallback: true, // Allow access to request
     },
     async (req, accessToken, refreshToken, profile, done) => {
-        
+
         const { id, displayName, emails, picture } = profile;
         const email = emails[0].value;
 
@@ -45,7 +45,7 @@ passport.use(new GoogleStrategy(
                 name: displayName,
                 email: email,
                 googleId: id,
-                googleProfilePicture:picture,
+                googleProfilePicture: picture,
                 role,
             };
 
@@ -55,14 +55,7 @@ passport.use(new GoogleStrategy(
             else if (role === 'farmer') user = await Farmer.create(newUser);
             else user = await User.create(newUser);
 
-            // Generate JWT Token
-            const token = jwt.sign(
-                { id: user._id }, // Store ID in JWT
-                process.env.JWT_SECRET,
-                { expiresIn: "1d" }
-            );
-
-            return done(null, { user, token }); //Return user and user
+            return done(null, user);
         } catch (error) {
             return done(error, null);
         }

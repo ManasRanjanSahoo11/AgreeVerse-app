@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const passport = require('../strategy/google');
 const googleAuthRouter = express.Router();
 
@@ -9,9 +10,19 @@ googleAuthRouter.get('/google', passport.authenticate('google', { scope: ['profi
 googleAuthRouter.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/signin' }),
     (req, res) => {
-
+        // console.log("User in req:", req.user);
         // Setting up JWT 
-        const { user, token } = req.user // Extract user and token
+        const user = req.user // Extract user and token
+
+        // Generate JWT Token & Attach to user
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        // console.log(user);
+        // console.log(token);
 
         if (token) {
             res.cookie('token', token, {
@@ -23,7 +34,7 @@ googleAuthRouter.get('/google/callback',
         }
 
         // Redirect user based on role
-        const role = req.user.constructor.modelName.toLowerCase();
+        const role = req.user.role.toLowerCase();
 
         // Ensure the role is correctly set in session
         req.session.role = role;
@@ -31,53 +42,10 @@ googleAuthRouter.get('/google/callback',
         // Client URL(Frontend => React)
         const CLIENT_URL = "http://localhost:5173"
 
-        if (role === 'admin') return res.json({
-            success: true,
-            message: "Signup Successful",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: role
-            },
-            redirectURL: `${CLIENT_URL}/${role}/dashboard`
-        });
-
-        if (role === 'coordinator') return res.json({
-            success: true,
-            message: "Signup Successful",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: role
-            },
-            redirectURL: `${CLIENT_URL}/${role}/dashboard`
-        });
-
-        if (role === 'farmer') return res.json({
-            success: true,
-            message: "Signup Successful",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: role
-            },
-            redirectURL: `${CLIENT_URL}/${role}/dashboard`
-        });
-
-        if (role === 'user') return res.json({
-            success: true,
-            message: "Signup Successful",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: role
-            },
-            redirectURL: `${CLIENT_URL}/${role}/home`
-        });
+        if (role === 'admin') return res.redirect(`${CLIENT_URL}/${role}/dashboard`);
+        if (role === 'coordinator') return res.redirect(`${CLIENT_URL}/${role}/dashboard`);
+        if (role === 'farmer') return res.redirect( `${CLIENT_URL}/${role}/dashboard`);
+        if (role === 'user') return res.redirect( `${CLIENT_URL}/${role}/home`);
     }
 );
 
