@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Search, User, MoveRight } from 'lucide-react';
 import UserProfileCard from './UserProfileCard';
+import { AuthContext } from '../useContext/AuthContext';
 
 function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +21,10 @@ function Navbar() {
     setIsMenuOpen(false);
     setIsDropdownOpen(false);
   };
+
+  const { user } = useContext(AuthContext);
+  console.log(user);
+  
 
   return (
     <header className="w-full bg-zinc-700 border-b border-zinc-600 py-4 px-4 md:px-8 flex items-center justify-between flex-wrap gap-4 lg:px-16 lg:flex-nowrap lg:space-x-8">
@@ -141,12 +146,12 @@ function Navbar() {
           {/* Popup */}
           {isHover && (
             <div className="absolute top-full transform -translate-x-1/2 w-48 bg-zinc-700 text-white rounded-lg shadow-lg py-3 mt-1 z-50">
-              <a href="" className="flex items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
+              <a href="/signup" className="flex items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
                 <span className="font-semibold">Signup</span>
                 <MoveRight />
               </a>
 
-              <a href="" className="flex mt-1 items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
+              <a href="/signin" className="flex mt-1 items-center justify-between px-4 py-2 text-white hover:text-[#F0B90B] hover:px-4.5 transition duration-150 text-sm">
                 <span className="font-semibold">Signin</span>
                 <MoveRight />
               </a>
@@ -155,7 +160,7 @@ function Navbar() {
         </div>
       </div>
 
-      <UserProfileCard />
+      {/* <UserProfileCard /> */}
     </header>
   );
 }

@@ -1,48 +1,38 @@
-import React, { Children, createContext, useEffect, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
-const AuthContext = createContext(null)
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isLoading, setIsLoading] = useState(true)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState(null);
 
-    //Fetch user information
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                setIsLoading(true)
+    // Function to fetch user details
+    const fetchUserDetails = async () => {
+        try {
+            const response = await axios.get("http://localhost:8080/api/v1/user/dashboard", {
+                withCredentials: true, 
+            });
 
-                const res = await axios.post('', { withCredentials: true })
-
-                if (res.data && res.data.user) {
-                    setUser(res.data.user);
-                    setIsAuthenticated(true);
-                } else {
-                    setIsAuthenticated(false);
-                    setUser(null);
-                }
-
-            } catch (error) {
-                console.error('Failed to fetch user data:', error);
-                setIsAuthenticated(false);
+            if (response.data.success) {
+                localStorage.setItem("user", JSON.stringify(response.data.user)); // Store user in localStorage
+                setUser(response.data.user);
+            } else {
                 setUser(null);
-            } finally {
-                setIsLoading(false);
             }
+        } catch (error) {
+            console.error("Error fetching user:", error);
+            setUser(null);
         }
+    };
 
-        fetchUserData()
-    }, [])
+    // Fetch user details on mount
+    useEffect(() => {
+        fetchUserDetails();
+    }, []);
 
-    const value = {
-        isLoading,
-        isAuthenticated,
-        user,
-      };
-
-    return <AuthContext.Provider value={value}>
-        {children}
-    </AuthContext.Provider>
-}
+    return (
+        <AuthContext.Provider value={{ user, setUser, fetchUserDetails }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};

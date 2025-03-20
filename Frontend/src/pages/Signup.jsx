@@ -38,7 +38,7 @@ export default function Signup() {
                 password,
                 role: selectedRole,
             };
-            console.log(newUser);
+            // console.log(newUser);
             
             try {
                 const res = await axios.post(`http://localhost:8080/api/v1/${selectedRole}/signup`, newUser);
@@ -49,7 +49,7 @@ export default function Signup() {
                     }, 1000);
                 }
             } catch (error) {
-                console.error("Signup error:", error.response?.data || error.message);
+                console.error("Signup error:", error);
             }
         }
     };
